@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist/public" }
+    },
+    {
+      "src": "python_backend/app.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "server/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/analyze/:path*",
+      "destination": "/python_backend/app.py"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/server/index.ts"
+    },
+    {
+      "source": "/(index.html)?",
+      "destination": "/index.html"
+    }
+  ]
+}
