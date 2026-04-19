@@ -36,26 +36,31 @@ app.use((req, res, next) => {
   next();
 });
 
+// Registration logic
+const setupPromise = (async () => {
+  const server = await registerRoutes(app);
+
+  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    res.status(status).json({ message });
+    if (process.env.NODE_ENV !== "production") throw err;
+  });
+
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
+  
+  return server;
+})();
+
 export default app;
 
-if (process.env.NODE_ENV !== "production") {
-  (async () => {
-    const server = await registerRoutes(app);
-
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      throw err;
-    });
-
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
-
+// Listener for local development
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  setupPromise.then((server) => {
     const port = 5002;
     server.listen({
       port,
@@ -63,13 +68,7 @@ if (process.env.NODE_ENV !== "production") {
     }, () => {
       log(`serving on port ${port}`);
     });
-  })();
-} else {
-  // In production (Vercel), we just register routes
-  registerRoutes(app).then(() => {
-    serveStatic(app);
-    log("Routes registered for serverless execution");
   }).catch(err => {
-    console.error("Failed to register routes:", err);
+    console.error("Failed to start server:", err);
   });
 }

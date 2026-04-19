@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertEmotionSessionSchema, insertSuggestionSchema, type EmotionData } from "@shared/schema";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import session from "express-session";
 
 // Extend session interface
